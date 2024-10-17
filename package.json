@@ -1,0 +1,18 @@
+{
+  "name": "boardgame-score",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "spago build",
+    "test": "spago test",
+    "serve": "parcel dev/index.html --open",
+    "build-prod": "rm -rf dist && mkdir dist && cp dev/index.{html,css} dist/ && spago bundle-app --to dist/index.js && parcel build dist/index.html --no-source-maps --public-url ./"
+  },
+  "author": "",
+  "description": "",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "parcel": "^2.12.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13"
+  }
+}
