@@ -3,7 +3,10 @@
 .spago
 bower_components
 node_modules
+.psc-ide-port
+.parcel-cache
 
 # Generated files
 .psci
 output
+dist
