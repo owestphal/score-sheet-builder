@@ -23,7 +23,7 @@ module App.ScoreSheet
 import Prelude
 
 import Control.Lazy (defer)
-import Data.Array (concat, concatMap, foldr, intercalate, intersperse, (..))
+import Data.Array (concatMap, foldr, intersperse, (..))
 import Data.Generic.Rep (class Generic)
 import Data.Map (Map)
 import Data.Map as Map

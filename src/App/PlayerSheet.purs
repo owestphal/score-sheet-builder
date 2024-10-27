@@ -1,6 +1,7 @@
 module App.PlayerSheet
   ( Action(..)
   , State
+  , Output(..)
   , component
   , handleAction
   )
@@ -8,20 +9,20 @@ module App.PlayerSheet
 
 import Prelude
 
-import App.ScoreSheet (AggregateFunction(..), Name, ScoreSheet, SheetElement(..), Value(..), ValueExpr(..), ValueMap, initialValueMap, insertFields, insertValue, lookupIntValue, lookupToggleValue, qualifiedName, sumExpr)
+import App.ScoreSheet (Name, ScoreSheet, SheetElement(..), Value(..), ValueMap, insertValue, lookupIntValue, lookupToggleValue, qualifiedName)
 import Data.Array ((..))
 import Data.Int (fromString)
-import Data.Map as Map
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
-import Data.Tuple (Tuple(..))
-import Data.Tuple.Nested ((/\))
 import Halogen (ClassName(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events (onChecked, onValueInput)
 import Halogen.HTML.Properties (InputType(..), checked, classes, type_, value)
 
-type Input = ScoreSheet
+type Input = State
+
+data Output 
+  = ValueUpdate ValueMap 
 
 type State
   = { valueMap :: ValueMap, sheet :: ScoreSheet }
@@ -29,16 +30,16 @@ type State
 data Action
   = UpdateField Name Int
   | UpdateToggle Name Boolean
-  | UpdateSheet ScoreSheet
+  | Recive State
 
-component :: forall q o m. H.Component q Input o m
+component :: forall q m. H.Component q Input Output m
 component =
   H.mkComponent
-    { initialState: \sheet -> {valueMap: initialValueMap sheet, sheet }
+    { initialState: identity
     , render: render
     , eval: H.mkEval H.defaultEval 
       { handleAction = handleAction
-      , receive = Just <<< UpdateSheet
+      , receive = Just <<< Recive
       }
     }
 
@@ -46,18 +47,18 @@ render :: forall cs m. State -> H.ComponentHTML Action cs m
 render {valueMap, sheet} =
   renderSheet valueMap sheet
 
-handleAction :: forall cs o m. Action → H.HalogenM State Action cs o m Unit
-handleAction (UpdateField name val) = 
-  H.modify_ (\st -> st{valueMap = insertValue name (FieldValue val) st.valueMap})
-handleAction (UpdateToggle name val) = 
-  H.modify_ (\st -> st{valueMap = insertValue name (ToggleValue val) st.valueMap})
-handleAction (UpdateSheet sheet) = 
-  H.modify_ (\st -> st{valueMap = initialValueMap sheet, sheet = sheet})
+handleAction :: forall cs m. Action → H.HalogenM State Action cs Output m Unit
+handleAction (UpdateField name val) = do
+  st <- H.modify (\st -> st{valueMap = insertValue name (FieldValue val) st.valueMap})
+  H.raise $ ValueUpdate st.valueMap
+handleAction (UpdateToggle name val) = do
+  st <- H.modify (\st -> st{valueMap = insertValue name (ToggleValue val) st.valueMap})
+  H.raise $ ValueUpdate st.valueMap
+handleAction (Recive st) = H.put st
 
 renderSheet :: forall w. ValueMap -> ScoreSheet -> HH.HTML w Action
-renderSheet env xs = HH.div [classes [ClassName "inline-block"]] $ 
+renderSheet env xs = HH.div [classes [ClassName ""]] $ 
   (map (renderEntry identity env) xs)
-  -- <> [horizontalLine, HH.text $ show env ]
 
 renderEntry :: forall w. (Name -> Name) -> ValueMap -> SheetElement -> HH.HTML w Action
 renderEntry qualify env (SheetRound name n expr vs xs) = 
